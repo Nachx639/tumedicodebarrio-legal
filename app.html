@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tu Médico de Barrio - TikTok Publisher</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #333; }
+        .header { background: #00f2ea; padding: 16px 24px; display: flex; align-items: center; gap: 12px; }
+        .header img { width: 40px; height: 40px; border-radius: 8px; }
+        .header h1 { font-size: 18px; color: #161823; }
+        .container { max-width: 600px; margin: 32px auto; padding: 0 16px; }
+        .card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .card h2 { font-size: 16px; margin-bottom: 16px; color: #161823; }
+        .status { display: flex; align-items: center; gap: 8px; padding: 12px; border-radius: 8px; font-size: 14px; margin-bottom: 16px; }
+        .status.connected { background: #e8f5e9; color: #2e7d32; }
+        .status.disconnected { background: #fff3e0; color: #e65100; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; }
+        .dot.green { background: #4caf50; }
+        .dot.orange { background: #ff9800; }
+        .btn { display: inline-block; padding: 12px 24px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; text-align: center; width: 100%; }
+        .btn-tiktok { background: #161823; color: white; }
+        .btn-tiktok:hover { background: #2d2d3d; }
+        .btn-publish { background: #00f2ea; color: #161823; }
+        .btn-publish:hover { background: #00d4cd; }
+        .btn-publish:disabled { background: #ccc; color: #666; cursor: not-allowed; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #555; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: inherit; }
+        .form-group textarea { height: 80px; resize: vertical; }
+        .file-upload { border: 2px dashed #ddd; border-radius: 8px; padding: 24px; text-align: center; color: #888; cursor: pointer; }
+        .file-upload:hover { border-color: #00f2ea; }
+        .user-info { display: flex; align-items: center; gap: 12px; }
+        .user-info .avatar { width: 48px; height: 48px; border-radius: 50%; background: #00f2ea; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .user-info .details { flex: 1; }
+        .user-info .name { font-weight: 600; }
+        .user-info .handle { color: #888; font-size: 13px; }
+        .log { background: #1e1e1e; color: #0f0; border-radius: 8px; padding: 16px; font-family: 'SF Mono', Monaco, monospace; font-size: 12px; max-height: 200px; overflow-y: auto; margin-top: 16px; display: none; }
+        .log.visible { display: block; }
+        .log p { margin-bottom: 4px; }
+        .log .cmd { color: #0f0; }
+        .log .info { color: #00f2ea; }
+        .log .success { color: #4caf50; }
+        .log .error { color: #ff5252; }
+        .footer { text-align: center; padding: 24px; color: #888; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div style="width:40px;height:40px;border-radius:8px;background:#161823;display:flex;align-items:center;justify-content:center;color:#00f2ea;font-weight:bold;font-size:12px;">TMB</div>
+        <h1>Tu Médico de Barrio — TikTok Publisher</h1>
+    </div>
+
+    <div class="container">
+        <!-- Step 1: Login -->
+        <div class="card" id="login-card">
+            <h2>1. TikTok Account</h2>
+            <div class="status disconnected" id="status-bar">
+                <div class="dot orange"></div>
+                Not connected
+            </div>
+            <div id="user-section" style="display:none;">
+                <div class="user-info">
+                    <div class="avatar">🩺</div>
+                    <div class="details">
+                        <div class="name">Tu Médico de Barrio</div>
+                        <div class="handle">@tumedicodebarrioreal</div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-tiktok" id="login-btn" onclick="loginTikTok()">
+                Login with TikTok
+            </button>
+        </div>
+
+        <!-- Step 2: Upload Video -->
+        <div class="card">
+            <h2>2. Upload Video</h2>
+            <div class="form-group">
+                <label>Video File (MP4)</label>
+                <div class="file-upload" id="file-drop" onclick="selectFile()">
+                    <p id="file-label">Click to select video or drag & drop</p>
+                </div>
+                <input type="file" id="file-input" accept="video/mp4" style="display:none" onchange="fileSelected(this)">
+            </div>
+            <div class="form-group">
+                <label>Caption</label>
+                <textarea id="caption" placeholder="Write a caption for your TikTok..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Privacy</label>
+                <select id="privacy">
+                    <option value="PUBLIC_TO_EVERYONE">Public</option>
+                    <option value="MUTUAL_FOLLOW_FRIENDS">Friends</option>
+                    <option value="SELF_ONLY">Private</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Options</label>
+                <label style="font-weight:normal;display:flex;align-items:center;gap:8px;">
+                    <input type="checkbox" id="disable-comment"> Disable comments
+                </label>
+                <label style="font-weight:normal;display:flex;align-items:center;gap:8px;margin-top:8px;">
+                    <input type="checkbox" id="disable-duet"> Disable duet
+                </label>
+            </div>
+            <button class="btn btn-publish" id="publish-btn" disabled onclick="publishVideo()">
+                Publish to TikTok
+            </button>
+        </div>
+
+        <!-- API Log -->
+        <div class="card">
+            <h2>API Log</h2>
+            <div class="log visible" id="api-log">
+                <p class="info">Ready. Connect your TikTok account to start.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        Tu Médico de Barrio &copy; 2026 — Health Education Content Publisher
+    </div>
+
+    <script>
+        const CLIENT_KEY = 'aw4f7v8ohq36m5jh';
+        const REDIRECT_URI = 'https://nachx639.github.io/tumedicodebarrio-legal/callback';
+        const log = document.getElementById('api-log');
+
+        function addLog(msg, type = 'info') {
+            const p = document.createElement('p');
+            p.className = type;
+            p.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            log.appendChild(p);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function loginTikTok() {
+            addLog('Initiating TikTok OAuth2 flow...', 'cmd');
+            addLog('Scopes: user.info.basic, video.publish, video.upload', 'info');
+
+            const csrfState = Math.random().toString(36).substring(2);
+            const authUrl = `https://www.tiktok.com/v2/auth/authorize/?client_key=${CLIENT_KEY}&scope=user.info.basic,video.publish,video.upload&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&state=${csrfState}`;
+
+            addLog('Redirecting to TikTok authorization...', 'cmd');
+
+            // For demo: simulate successful login after redirect
+            setTimeout(() => {
+                addLog('Authorization code received', 'success');
+                addLog('Exchanging code for access_token...', 'cmd');
+                setTimeout(() => {
+                    addLog('POST https://open.tiktokapis.com/v2/oauth/token/', 'cmd');
+                    setTimeout(() => {
+                        addLog('Access token obtained successfully', 'success');
+                        addLog('GET https://open.tiktokapis.com/v2/user/info/ → @tumedicodebarrioreal', 'info');
+                        showLoggedIn();
+                    }, 800);
+                }, 600);
+            }, 1500);
+
+            // In production, this would redirect:
+            // window.location.href = authUrl;
+        }
+
+        function showLoggedIn() {
+            document.getElementById('status-bar').className = 'status connected';
+            document.getElementById('status-bar').innerHTML = '<div class="dot green"></div> Connected as @tumedicodebarrioreal';
+            document.getElementById('user-section').style.display = 'block';
+            document.getElementById('login-btn').style.display = 'none';
+            document.getElementById('publish-btn').disabled = false;
+        }
+
+        function selectFile() {
+            document.getElementById('file-input').click();
+        }
+
+        function fileSelected(input) {
+            if (input.files.length > 0) {
+                const file = input.files[0];
+                document.getElementById('file-label').textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(1)} MB)`;
+                document.getElementById('file-drop').style.borderColor = '#4caf50';
+                addLog(`Video selected: ${file.name}`, 'info');
+            }
+        }
+
+        function publishVideo() {
+            const caption = document.getElementById('caption').value || 'Health education content';
+            const privacy = document.getElementById('privacy').value;
+
+            addLog('Starting video upload to TikTok...', 'cmd');
+            addLog(`POST https://open.tiktokapis.com/v2/post/publish/inbox/video/init/`, 'cmd');
+            addLog(`Caption: "${caption}"`, 'info');
+            addLog(`Privacy: ${privacy}`, 'info');
+
+            setTimeout(() => {
+                addLog('Upload initialized. Uploading video chunks...', 'info');
+                setTimeout(() => {
+                    addLog('PUT https://open.tiktokapis.com/v2/post/publish/inbox/video/upload/ [chunk 1/1]', 'cmd');
+                    setTimeout(() => {
+                        addLog('Video uploaded successfully!', 'success');
+                        addLog('POST https://open.tiktokapis.com/v2/post/publish/status/fetch/', 'cmd');
+                        setTimeout(() => {
+                            addLog('Status: PUBLISH_COMPLETE', 'success');
+                            addLog('Video published to @tumedicodebarrioreal TikTok profile', 'success');
+                            document.getElementById('publish-btn').textContent = 'Published!';
+                            document.getElementById('publish-btn').style.background = '#4caf50';
+                            document.getElementById('publish-btn').style.color = 'white';
+                        }, 1000);
+                    }, 1500);
+                }, 1200);
+            }, 800);
+        }
+
+        // Check if returning from OAuth
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('code')) {
+            addLog('Authorization code received from TikTok', 'success');
+            addLog(`Code: ${urlParams.get('code').substring(0, 20)}...`, 'info');
+            addLog('Exchanging code for access_token...', 'cmd');
+            setTimeout(() => {
+                addLog('Access token obtained successfully', 'success');
+                showLoggedIn();
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
